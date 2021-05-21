@@ -17,39 +17,38 @@ public class Board extends JPanel implements ActionListener {
 
     private final int SQUARE = 22;
     private final int WIDTH=28;
-    private final int HEIGHT=31;
+    private final int HEIGHT=30;
     private final String[] MAZEDATA={   
+                                    "XXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+                                    "X         XX    XX         X",
+                                    "X XXXX XX XX XX XX XX XXXX X",
+                                    "X XXXX XX XX XX XX XX XXXX X",
+                                    "X      XX    XX    XX      X",
+                                    "X XXXX XXXXX XX XXXXX XXXX X",
+                                    "X XXXX XXXXX XX XXXXX XXXX X",
+                                    "X XX         XX         XX X",
+                                    "X XX XXXX XXXXXXXX XXXX XX X",
+                                    "X XX XXXX XXXXXXXX XXXX XX X",
                                     "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
-                                    "                            ",
+                                    "X XXXX XX XXXXXXXX XX XXXX X",
+                                    "X XXXX XX X      X XX XXXX X",
+                                    "X      XX X      X XX      X",
+                                    "X XXXX XX XXXXXXXX XX XXXX X",
+                                    "X XXXX XX          XX XXXX X",
+                                    "X   XX XX XXXXXXXX XX XX   X",
+                                    "XXX XX XX XXXXXXXX XX XX XXX",
+                                    "XXX XX       XX       XX XXX",
+                                    "    XX XXXXX XX XXXXX XX    ",
+                                    "X XXXX XXXXX XX XXXXX XXXX X",
+                                    "X XXXX XX          XX XXXX X",
+                                    "X      XX XX XX XX XX      X",
+                                    "X XX XXXX XX XX XX XXXX XX X",
+                                    "X XX XXXX XX XX XX XXXX XX X",
+                                    "X XX      XX    XX      XX X",
+                                    "X XXXXXXX XXXXXXXX XXXXXXX X",
+                                    "X XXXXXXX XXXXXXXX XXXXXXX X",
+                                    "X                          X",
+                                    "XXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                                 };
  
     private final int B_WIDTH = WIDTH*SQUARE;
@@ -92,6 +91,9 @@ public class Board extends JPanel implements ActionListener {
                     case ' ':
                         MAZE[x][y]='.';
                         break;
+                    case 'X':
+                        MAZE[x][y]='X';
+                        break;
                     default:
                         throw new Exception("Chybný znak v bludišti");
                 }
@@ -109,18 +111,44 @@ public class Board extends JPanel implements ActionListener {
         doDrawing(g);
     }
     
+    private char getMaze(int x, int y){
+        if ((x<0)||(x>=WIDTH)||(y<0)||(y>=HEIGHT)) {
+            return 'X';
+        } else {
+            return MAZE[x][y];
+        }
+    }
     private void doDrawing(Graphics g) {
         
         if (inGame) {
             // vykresli bludišě
+            final int s3 = SQUARE/3;
+            final int fit = SQUARE - 2*s3;
             for (int y = 0; y < HEIGHT; y++) {
                 for (int x = 0; x < WIDTH; x++) {
+                    int xc = x*SQUARE;
+                    int yc = (y+1)*SQUARE;
                     switch (MAZE[x][y]) {
                         case '.':
-                            g.drawImage(dot, 
-                                        x*SQUARE+(SQUARE-dot.getWidth(null))/2,
-                                        (y+1)*SQUARE+(SQUARE-dot.getHeight(null))/2, this);
+                            g.drawImage(dot,
+                                        xc+(SQUARE-dot.getWidth(null))/2,
+                                        yc+(SQUARE-dot.getHeight(null))/2, this);
                             break;
+                        case 'X':
+                            g.setColor(java.awt.Color.blue);
+                            g.fillRect(xc+s3, yc+s3, s3, s3);
+                            if (getMaze(x-1,y)=='X') {
+                                g.fillRect(xc,yc+s3,s3,s3);
+                                if ((getMaze(x-1,y-1)=='X') && (getMaze(x,y-1)=='X')) g.fillRect(xc,yc,s3,s3);
+                                if ((getMaze(x-1,y+1)=='X') && (getMaze(x,y+1)=='X')) g.fillRect(xc,yc+2*s3,s3,fit);
+                            };
+                            if (getMaze(x+1,y)=='X') {
+                                g.fillRect(xc+2*s3,yc+s3,fit,s3);
+                                if ((getMaze(x+1,y-1)=='X') && (getMaze(x,y-1)=='X')) g.fillRect(xc+2*s3,yc,fit,s3);
+                                if ((getMaze(x+1,y+1)=='X') && (getMaze(x,y+1)=='X')) g.fillRect(xc+2*s3,yc+2*s3,fit,fit);
+                            }    
+                            if (getMaze(x,y-1)=='X') g.fillRect(xc+s3,yc,s3,s3);
+                            if (getMaze(x,y+1)=='X') g.fillRect(xc+s3,yc+2*s3,s3,fit);
                     }
                 }
             }
