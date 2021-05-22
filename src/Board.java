@@ -9,6 +9,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.EnumMap;
+import java.util.Map;
+
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.Timer;
@@ -50,7 +53,9 @@ public class Board extends JPanel implements ActionListener {
                                     "X                          X",
                                     "XXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                                 };
- 
+
+    enum Dir {L,R,U,D};
+
     private final int B_WIDTH = WIDTH*SQUARE;
     private final int B_HEIGHT = (HEIGHT+3)*SQUARE;
     private final int DELAY = 140;
@@ -58,8 +63,15 @@ public class Board extends JPanel implements ActionListener {
     private Timer timer;
     private boolean inGame;
     private Image dot;
+    private Map <Dir,Image> pacMan;
+    private Font small;
+    private FontMetrics smallM;
     
     private char[][] MAZE = new char[WIDTH][HEIGHT];
+    private long score;
+    private int pacX,pacY;
+    private Dir pacDir;
+
     
     public Board() throws Exception {
         
@@ -74,13 +86,24 @@ public class Board extends JPanel implements ActionListener {
         setFocusable(true);
 
         setPreferredSize(new Dimension(B_WIDTH, B_HEIGHT));
-        loadImages();
+        loadAssets();
     }
 
-    private void loadImages() {
+    private void loadAssets() {
 
         ImageIcon iid = new ImageIcon("src/resources/dot.png");
         dot = iid.getImage();
+        pacMan = new EnumMap<Dir,Image>(Dir.class);
+        iid = new ImageIcon("src/resources/pacWL.png");
+        pacMan.put(Dir.L,iid.getImage());
+        iid = new ImageIcon("src/resources/pacWR.png");
+        pacMan.put(Dir.R,iid.getImage());
+        iid = new ImageIcon("src/resources/pacWU.png");
+        pacMan.put(Dir.U,iid.getImage());
+        iid = new ImageIcon("src/resources/pacWD.png");
+        pacMan.put(Dir.D,iid.getImage());
+        small = new Font("Helvetica", Font.BOLD, 14);
+        smallM = getFontMetrics(small);
     }
 
     private void initGame() throws Exception {
@@ -100,6 +123,11 @@ public class Board extends JPanel implements ActionListener {
             }
         }
         
+        score = 0;
+        pacX=14;
+        pacY=10;
+        pacDir=Dir.U;
+
         inGame = true;
         timer = new Timer(DELAY, this);
         timer.start();
@@ -121,6 +149,7 @@ public class Board extends JPanel implements ActionListener {
     private void doDrawing(Graphics g) {
         
         if (inGame) {
+
             // vykresli bludišě
             final int s3 = SQUARE/3;
             final int fit = SQUARE - 2*s3;
@@ -135,7 +164,7 @@ public class Board extends JPanel implements ActionListener {
                                         yc+(SQUARE-dot.getHeight(null))/2, this);
                             break;
                         case 'X':
-                            g.setColor(java.awt.Color.blue);
+                            g.setColor(Color.blue);
                             g.fillRect(xc+s3, yc+s3, s3, s3);
                             if (getMaze(x-1,y)=='X') {
                                 g.fillRect(xc,yc+s3,s3,s3);
@@ -152,6 +181,17 @@ public class Board extends JPanel implements ActionListener {
                     }
                 }
             }
+
+            // vytiskni score
+            g.setColor(Color.white);
+            g.setFont(small);
+            String msg = String.format("SCORE: %8d",score);
+            g.drawString(msg,0, 20);
+
+            // nakresli pacmana
+            int shift = (22-pacMan.get(pacDir).getWidth(null))/2;
+            g.drawImage(pacMan.get(pacDir),pacX*SQUARE+shift,(pacY+1)*SQUARE+shift,this);
+
             // Updatuj obrazovku
             Toolkit.getDefaultToolkit().sync();
         } else {
@@ -193,20 +233,39 @@ public class Board extends JPanel implements ActionListener {
             int key = e.getKeyCode();
 
             if (key == KeyEvent.VK_LEFT) {
-                // TODO: move pacman left
+                pacDir=Dir.L;
+                if (pacX==0){
+                    pacX=WIDTH-1;
+                } else {
+                    if (MAZE[pacX-1][pacY]!='X') pacX--;
+                }
             }
 
             if (key == KeyEvent.VK_RIGHT) {
-                // TODO: move pacman right
+                pacDir=Dir.R;
+                if (pacX==WIDTH-1) {
+                    pacX=0;
+                } else {
+                    if (MAZE[pacX+1][pacY]!='X') pacX++;
+                }
             }
 
             if (key == KeyEvent.VK_UP) {
-                // TODO: move pacman up
+                pacDir=Dir.U;
+                if (pacY==0){
+                    pacY=HEIGHT-1;
+                } else {
+                    if (MAZE[pacX][pacY-1]!='X') pacY--;
+                }
             }
 
             if (key == KeyEvent.VK_DOWN) {
-                // TODO: move pacman down
-                inGame = false;
+                pacDir=Dir.D;
+                if (pacY==HEIGHT-1) {
+                    pacY=0;
+                } else {
+                    if (MAZE[pacX][pacY+1]!='X') pacY++;
+                }
             }
         }
     }
