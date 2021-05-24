@@ -69,6 +69,8 @@ public class Board extends JPanel implements ActionListener {
     
     private char[][] MAZE = new char[WIDTH][HEIGHT];
     private long score;
+    private long dotcount;
+    private int lives;
     private int pacX,pacY;
     private Dir pacDir;
 
@@ -107,12 +109,13 @@ public class Board extends JPanel implements ActionListener {
     }
 
     private void initGame() throws Exception {
-
+        dotcount=0;
         for (int y = 0; y < HEIGHT; y++) {
             for (int x = 0; x < WIDTH; x++) {
                 switch (MAZEDATA[y].charAt(x)) {
                     case ' ':
                         MAZE[x][y]='.';
+                        dotcount++;
                         break;
                     case 'X':
                         MAZE[x][y]='X';
@@ -122,11 +125,13 @@ public class Board extends JPanel implements ActionListener {
                 }
             }
         }
-        
+        dotcount=dotcount-12;
+        dotcount=100;
         score = 0;
         pacX=14;
         pacY=10;
         pacDir=Dir.U;
+        lives=5;
 
         inGame = true;
         timer = new Timer(DELAY, this);
@@ -146,68 +151,69 @@ public class Board extends JPanel implements ActionListener {
             return MAZE[x][y];
         }
     }
-    private void doDrawing(Graphics g) {
-        
-        if (inGame) {
 
-            // vykresli bludišě
-            final int s3 = SQUARE/3;
-            final int fit = SQUARE - 2*s3;
-            for (int y = 0; y < HEIGHT; y++) {
-                for (int x = 0; x < WIDTH; x++) {
-                    int xc = x*SQUARE;
-                    int yc = (y+1)*SQUARE;
-                    switch (MAZE[x][y]) {
-                        case '.':
-                            g.drawImage(dot,
-                                        xc+(SQUARE-dot.getWidth(null))/2,
-                                        yc+(SQUARE-dot.getHeight(null))/2, this);
-                            break;
-                        case 'X':
-                            g.setColor(Color.blue);
-                            g.fillRect(xc+s3, yc+s3, s3, s3);
-                            if (getMaze(x-1,y)=='X') {
-                                g.fillRect(xc,yc+s3,s3,s3);
-                                if ((getMaze(x-1,y-1)=='X') && (getMaze(x,y-1)=='X')) g.fillRect(xc,yc,s3,s3);
-                                if ((getMaze(x-1,y+1)=='X') && (getMaze(x,y+1)=='X')) g.fillRect(xc,yc+2*s3,s3,fit);
-                            };
-                            if (getMaze(x+1,y)=='X') {
-                                g.fillRect(xc+2*s3,yc+s3,fit,s3);
-                                if ((getMaze(x+1,y-1)=='X') && (getMaze(x,y-1)=='X')) g.fillRect(xc+2*s3,yc,fit,s3);
-                                if ((getMaze(x+1,y+1)=='X') && (getMaze(x,y+1)=='X')) g.fillRect(xc+2*s3,yc+2*s3,fit,fit);
-                            }    
-                            if (getMaze(x,y-1)=='X') g.fillRect(xc+s3,yc,s3,s3);
-                            if (getMaze(x,y+1)=='X') g.fillRect(xc+s3,yc+2*s3,s3,fit);
-                    }
-                }
-            }
-
-            // vytiskni score
-            g.setColor(Color.white);
-            g.setFont(small);
-            String msg = String.format("SCORE: %8d",score);
-            g.drawString(msg,0, 20);
-
-            // nakresli pacmana
-            int shift = (22-pacMan.get(pacDir).getWidth(null))/2;
-            g.drawImage(pacMan.get(pacDir),pacX*SQUARE+shift,(pacY+1)*SQUARE+shift,this);
-
-            // Updatuj obrazovku
-            Toolkit.getDefaultToolkit().sync();
-        } else {
-            gameOver(g);
-        }        
+    private void writeMessage(Graphics g,String message) {
+        final Font big = new Font("Helvetica", Font.BOLD, 36);
+        final FontMetrics bigM = getFontMetrics(big);
+        g.setColor(Color.white);
+        g.setFont(big);
+        g.drawString(message,
+                     (B_WIDTH-bigM.stringWidth(message))/2,
+                     (B_HEIGHT-bigM.getHeight())/2);
     }
 
-    private void gameOver(Graphics g) {
+    private void doDrawing(Graphics g) {
         
-        String msg = "Konec hry";
-        Font small = new Font("Helvetica", Font.BOLD, 14);
-        FontMetrics metr = getFontMetrics(small);
+        // vykresli bludišě
+        final int s3 = SQUARE/3;
+        final int fit = SQUARE - 2*s3;
+        for (int y = 0; y < HEIGHT; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                int xc = x*SQUARE;
+                int yc = (y+1)*SQUARE;
+                switch (MAZE[x][y]) {
+                    case '.':
+                        g.drawImage(dot,
+                                    xc+(SQUARE-dot.getWidth(null))/2,
+                                    yc+(SQUARE-dot.getHeight(null))/2, this);
+                        break;
+                    case 'X':
+                        g.setColor(Color.blue);
+                        g.fillRect(xc+s3, yc+s3, s3, s3);
+                        if (getMaze(x-1,y)=='X') {
+                            g.fillRect(xc,yc+s3,s3,s3);
+                            if ((getMaze(x-1,y-1)=='X') && (getMaze(x,y-1)=='X')) g.fillRect(xc,yc,s3,s3);
+                            if ((getMaze(x-1,y+1)=='X') && (getMaze(x,y+1)=='X')) g.fillRect(xc,yc+2*s3,s3,fit);
+                        };
+                        if (getMaze(x+1,y)=='X') {
+                            g.fillRect(xc+2*s3,yc+s3,fit,s3);
+                            if ((getMaze(x+1,y-1)=='X') && (getMaze(x,y-1)=='X')) g.fillRect(xc+2*s3,yc,fit,s3);
+                            if ((getMaze(x+1,y+1)=='X') && (getMaze(x,y+1)=='X')) g.fillRect(xc+2*s3,yc+2*s3,fit,fit);
+                        }    
+                        if (getMaze(x,y-1)=='X') g.fillRect(xc+s3,yc,s3,s3);
+                        if (getMaze(x,y+1)=='X') g.fillRect(xc+s3,yc+2*s3,s3,fit);
+                }
+            }
+        }
 
+        // vytiskni score
         g.setColor(Color.white);
         g.setFont(small);
-        g.drawString(msg, (B_WIDTH - metr.stringWidth(msg)) / 2, B_HEIGHT / 2);
+        String msg = String.format("SCORE: %8d",score);
+        g.drawString(msg,0, 20);
+
+        // nakresli pacmana
+        int shift = (22-pacMan.get(pacDir).getWidth(null))/2;
+        g.drawImage(pacMan.get(pacDir),pacX*SQUARE+shift,(pacY+1)*SQUARE+shift,this);
+
+        if (!inGame){
+            if (lives>0) writeMessage(g,"LEVEL UP"); 
+            else writeMessage(g,"GAME OVER");
+        }
+
+        // Updatuj obrazovku
+        Toolkit.getDefaultToolkit().sync();
+       
     }
 
     @Override
@@ -215,7 +221,6 @@ public class Board extends JPanel implements ActionListener {
 
         if (inGame) {
 
-            // TODO: move PacMan
             // TODO: move ghost
             // TODO: check colisions
             // TODO: update scores
@@ -231,41 +236,51 @@ public class Board extends JPanel implements ActionListener {
         public void keyPressed(KeyEvent e) {
 
             int key = e.getKeyCode();
-
-            if (key == KeyEvent.VK_LEFT) {
-                pacDir=Dir.L;
-                if (pacX==0){
-                    pacX=WIDTH-1;
-                } else {
-                    if (MAZE[pacX-1][pacY]!='X') pacX--;
+            if (inGame) {
+                switch (key) {
+                    case KeyEvent.VK_LEFT:
+                        pacDir=Dir.L;
+                        if (pacX==0){
+                            pacX=WIDTH-1;
+                        } else {
+                            if (MAZE[pacX-1][pacY]!='X') pacX--;
+                        }
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        pacDir=Dir.R;
+                        if (pacX==WIDTH-1) {
+                            pacX=0;
+                        } else {
+                            if (MAZE[pacX+1][pacY]!='X') pacX++;
+                        }
+                        break;
+                    case KeyEvent.VK_UP:
+                        pacDir=Dir.U;
+                        if (pacY==0){
+                            pacY=HEIGHT-1;
+                        } else {
+                            if (MAZE[pacX][pacY-1]!='X') pacY--;
+                        }
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        pacDir=Dir.D;
+                        if (pacY==HEIGHT-1) {
+                            pacY=0;
+                        } else {
+                            if (MAZE[pacX][pacY+1]!='X') pacY++;
+                        }
+                        break;
+                }    
+                // Eat the food
+                switch (MAZE[pacX][pacY]) {
+                    case '.':
+                        MAZE[pacX][pacY]=' ';
+                        score=score+10;
+                        dotcount--;
+                        break;
                 }
-            }
-
-            if (key == KeyEvent.VK_RIGHT) {
-                pacDir=Dir.R;
-                if (pacX==WIDTH-1) {
-                    pacX=0;
-                } else {
-                    if (MAZE[pacX+1][pacY]!='X') pacX++;
-                }
-            }
-
-            if (key == KeyEvent.VK_UP) {
-                pacDir=Dir.U;
-                if (pacY==0){
-                    pacY=HEIGHT-1;
-                } else {
-                    if (MAZE[pacX][pacY-1]!='X') pacY--;
-                }
-            }
-
-            if (key == KeyEvent.VK_DOWN) {
-                pacDir=Dir.D;
-                if (pacY==HEIGHT-1) {
-                    pacY=0;
-                } else {
-                    if (MAZE[pacX][pacY+1]!='X') pacY++;
-                }
+                if (dotcount==0) 
+                    inGame=false;
             }
         }
     }
