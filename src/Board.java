@@ -16,8 +16,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-import org.graalvm.compiler.loop.InductionVariable.Direction;
-
 public class Board extends JPanel implements ActionListener {
 
     private final int SQUARE = 22;
