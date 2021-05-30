@@ -16,6 +16,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
+import org.graalvm.compiler.loop.InductionVariable.Direction;
+
 public class Board extends JPanel implements ActionListener {
 
     private final int SQUARE = 22;
@@ -34,8 +36,8 @@ public class Board extends JPanel implements ActionListener {
                                     "X XX XXXX XXXXXXXX XXXX XX X",
                                     "                            ",
                                     "X XXXX XX XXXXXXXX XX XXXX X",
-                                    "X XXXX XX X      X XX XXXX X",
-                                    "X      XX X      X XX      X",
+                                    "X XXXX XX XX    XX XX XXXX X",
+                                    "X      XX XXXXXXXX XX      X",
                                     "X XXXX XX XXXXXXXX XX XXXX X",
                                     "X XXXX XX          XX XXXX X",
                                     "X   XX XX XXXXXXXX XX XX   X",
@@ -55,6 +57,7 @@ public class Board extends JPanel implements ActionListener {
                                 };
 
     enum Dir {L,R,U,D};
+    enum State {ready,running,dead};
 
     private final int B_WIDTH = WIDTH*SQUARE;
     private final int B_HEIGHT = (HEIGHT+3)*SQUARE;
@@ -74,7 +77,33 @@ public class Board extends JPanel implements ActionListener {
     private int pacX,pacY;
     private Dir pacDir;
 
-    
+    private class Ghost {
+        private int x,y;
+        private State state;
+        private Dir dir;
+        private Image image;
+        private char color;
+
+        public Ghost(int newX,int newY,char newColor) {
+            // výchozí pozice ducha
+            x=newX;y=newY;
+            state=State.ready;
+            color=newColor;
+            dir=Dir.U;
+
+            // load resources
+            ImageIcon iid = new ImageIcon("src/resources/ghost"+color+".png");
+            image = iid.getImage();
+        }
+
+        public void draw(Graphics g) {
+            int shift = (22-image.getWidth(null))/2;
+            g.drawImage(image,x*SQUARE+shift,(y+1)*SQUARE+shift,null);
+        }
+    }
+
+    private Ghost[] ghosts = new Ghost[1];
+
     public Board() throws Exception {
         
         initBoard();
@@ -136,6 +165,8 @@ public class Board extends JPanel implements ActionListener {
         inGame = true;
         timer = new Timer(DELAY, this);
         timer.start();
+
+        ghosts[0]=new Ghost(13, 12,'R');
     }
 
     @Override
@@ -210,6 +241,9 @@ public class Board extends JPanel implements ActionListener {
             if (lives>0) writeMessage(g,"LEVEL UP"); 
             else writeMessage(g,"GAME OVER");
         }
+
+        // nakresli duchy
+        ghosts[0].draw(g);
 
         // Updatuj obrazovku
         Toolkit.getDefaultToolkit().sync();
