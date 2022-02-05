@@ -1,4 +1,5 @@
 import java.awt.EventQueue;
+
 import javax.swing.JFrame;
 
 public class PacMan extends JFrame {
